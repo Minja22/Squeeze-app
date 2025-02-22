@@ -9,7 +9,7 @@ st.markdown("""
 /* Force the button row to remain horizontal */
 .button-row {
     display: inline-flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     justify-content: space-around;
     width: 100%;
     margin-top: 4px;
