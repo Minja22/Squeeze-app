@@ -20,23 +20,23 @@ def add_task(title, estimated_time):
         "starred": False,
     }
     st.session_state.tasks.append(task)
-    st.experimental_rerun()
+    st.rerun()
 
 def toggle_complete(task_id):
     for task in st.session_state.tasks:
         if task["id"] == task_id:
             task["completed"] = not task["completed"]
-    st.experimental_rerun()
+    st.rerun()
 
 def toggle_star(task_id):
     for task in st.session_state.tasks:
         if task["id"] == task_id:
             task["starred"] = not task["starred"]
-    st.experimental_rerun()
+    st.rerun()
 
 def delete_task(task_id):
     st.session_state.tasks = [task for task in st.session_state.tasks if task["id"] != task_id]
-    st.experimental_rerun()
+    st.rerun()
 
 def generate_optimized_tasks(time_available):
     # Filter only pending tasks
@@ -60,7 +60,7 @@ if st.button("Go Time"):
     )
     if st.button("Generate Optimized List"):
         st.session_state.optimized_tasks = generate_optimized_tasks(st.session_state.time_available)
-        st.experimental_rerun()
+        st.rerun()
 
 # Display the Master Task List
 st.markdown("## Master Task List")
