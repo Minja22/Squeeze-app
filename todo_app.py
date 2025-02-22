@@ -1,154 +1,183 @@
 import streamlit as st
+from dataclasses import dataclass, field
+import uuid
 
-# Initialize session state variables
+# ------------------------------
+# Task Model
+# ------------------------------
+@dataclass
+class Task:
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    title: str = ""
+    duration: int = 5
+    completed: bool = False
+
+# ------------------------------
+# Initialize Session State
+# ------------------------------
 if "tasks" not in st.session_state:
-    st.session_state["tasks"] = []
-if "generated_tasks" not in st.session_state:
-    st.session_state["generated_tasks"] = []
-if "dark_mode" not in st.session_state:
-    st.session_state["dark_mode"] = False
-if "page" not in st.session_state:
-    st.session_state["page"] = "main"  # "main" or "go_time"
-if "show_modal" not in st.session_state:
-    st.session_state["show_modal"] = False
+    st.session_state.tasks = []
 
-# Functions for task operations
-def add_task(task_title, duration):
-    if task_title and duration:
-        st.session_state["tasks"].append({"task": task_title, "duration": duration, "completed": False})
+# ------------------------------
+# Helper Functions
+# ------------------------------
+def add_task(title, duration):
+    st.session_state.tasks.append(Task(title=title, duration=duration))
 
-def complete_task(index, from_generated=False):
-    st.session_state["tasks"][index]["completed"] = True
-    if from_generated:
-        for gen_task in st.session_state["generated_tasks"]:
-            if gen_task["task"] == st.session_state["tasks"][index]["task"]:
-                gen_task["completed"] = True
+def update_task(task_id, title, duration):
+    for i, task in enumerate(st.session_state.tasks):
+        if task.id == task_id:
+            st.session_state.tasks[i].title = title
+            st.session_state.tasks[i].duration = duration
+            break
 
-def undo_task(index, from_generated=False):
-    st.session_state["tasks"][index]["completed"] = False
-    if from_generated:
-        for gen_task in st.session_state["generated_tasks"]:
-            if gen_task["task"] == st.session_state["tasks"][index]["task"]:
-                gen_task["completed"] = False
+def delete_task(task_id):
+    st.session_state.tasks = [t for t in st.session_state.tasks if t.id != task_id]
 
-def generate_task_list(available_time):
-    st.session_state["generated_tasks"] = []
-    total_time = 0
-    # Iterate over tasks sorted by duration and get the master list index.
-    for task in sorted(st.session_state["tasks"], key=lambda x: x["duration"]):
-        master_index = st.session_state["tasks"].index(task)
-        if total_time + task["duration"] <= available_time and not task["completed"]:
-            st.session_state["generated_tasks"].append({**task, "index": master_index})
-            total_time += task["duration"]
-    st.session_state["page"] = "go_time"
+def mark_task_complete(task_id):
+    for task in st.session_state.tasks:
+        if task.id == task_id:
+            task.completed = True
+            break
 
-def toggle_theme():
-    st.session_state["dark_mode"] = not st.session_state["dark_mode"]
+def recover_task(task_id):
+    for task in st.session_state.tasks:
+        if task.id == task_id:
+            task.completed = False
+            break
 
-# Optional: Apply dark mode styling if enabled
-if st.session_state["dark_mode"]:
-    st.markdown("""
-    <style>
-    body { background-color: #121212; color: white; }
-    .stButton button { background-color: #333; color: white; }
-    </style>
-    """, unsafe_allow_html=True)
+def get_active_tasks():
+    return [t for t in st.session_state.tasks if not t.completed]
 
-# MAIN PAGE
-if st.session_state["page"] == "main":
-    st.title("Squeeze: Time-Based Task Manager")
-    
-    # Theme Toggle button
-    if st.button("Toggle Dark Mode 🌙/☀️"):
-        toggle_theme()
-    
-    st.subheader("Your Ongoing Task List")
-    
-    # Display the current tasks
-    if st.session_state["tasks"]:
-        for index, task in enumerate(st.session_state["tasks"]):
-            col1, col2, col3 = st.columns([6, 2, 2])
-            with col1:
-                st.write(f"**{task['task']}**")
-                st.write(f"*{task['duration']} min*")
-            with col2:
-                if not task["completed"]:
-                    if st.button(f"✅ Done {index}"):
-                        complete_task(index)
-                        st.success("Task Completed!")
-            with col3:
-                if task["completed"]:
-                    if st.button(f"↩️ Undo {index}", key=f"undo_{index}"):
-                        undo_task(index)
-                    st.markdown("🎉 *Completed!*")
-    
-    st.markdown("---")
-    st.markdown("### Tap to Add a New Task")
-    
-    # Tap area using an invisible button styled with custom CSS
-    st.markdown("""
-    <style>
-    .tap-area {
-        width: 100%;
-        height: 200px;
-        border: 2px dashed #ccc;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-    }
-    .tap-button > button {
-        background-color: transparent;
-        border: none;
-        width: 100%;
-        height: 200px;
-        font-size: 0;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("<div class='tap-area'>", unsafe_allow_html=True)
-    if st.button("Tap Here to Add a New Task", key="tap_button"):
-        st.session_state["show_modal"] = True
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Modal-like input form triggered by tapping the area
-    if st.session_state["show_modal"]:
-        st.markdown("### Add Task")
-        new_task_title = st.text_input("Task Title", key="new_task_title")
-        new_task_duration = st.number_input("Duration (minutes, increments of 5)", min_value=5, step=5, key="new_task_duration")
-        if st.button("Done", key="modal_done"):
-            add_task(new_task_title, new_task_duration)
-            st.success(f"Task '{new_task_title}' added!")
-            st.session_state["show_modal"] = False
-    
-    st.markdown("---")
-    st.subheader("Go Time!")
-    available_time = st.slider("How much time do you have?", 5, 120, 30, 5)
-    if st.button("Generate Focused Task List 🚀"):
-        generate_task_list(available_time)
+def get_completed_tasks():
+    return [t for t in st.session_state.tasks if t.completed]
 
-# GO TIME PAGE
-elif st.session_state["page"] == "go_time":
-    st.title("Focused Task List 🚀")
-    if st.button("⬅️ Back to Main List"):
-        st.session_state["page"] = "main"
-    if st.session_state["generated_tasks"]:
-        st.subheader("Here’s your focused list:")
-        for task in st.session_state["generated_tasks"]:
-            col1, col2 = st.columns([8, 2])
-            with col1:
-                st.write(f"✅ **{task['task']}** ({task['duration']} min)")
-            with col2:
-                if not task["completed"]:
-                    if st.button(f"✅ Done {task['index']} (Go Time)", key=f"go_done_{task['index']}"):
-                        complete_task(task["index"], from_generated=True)
-                        st.success("Task Completed!")
+# ------------------------------
+# Main App UI
+# ------------------------------
+st.title("Squeeze - Task Manager")
+
+# Navigation Sidebar
+page = st.sidebar.radio("Navigation", ["Tasks", "Go Time"])
+
+# ------------------------------
+# TASKS PAGE
+# ------------------------------
+if page == "Tasks":
+    st.header("Tasks")
+
+    # Add New Task Form
+    with st.expander("Add New Task", expanded=True):
+        with st.form("add_task_form"):
+            new_title = st.text_input("Task Title")
+            new_duration = st.number_input("Duration (minutes)", min_value=5, max_value=120, step=5, value=5)
+            submitted = st.form_submit_button("Add Task")
+            if submitted:
+                if new_title.strip():
+                    add_task(new_title.strip(), new_duration)
+                    st.success("Task added!")
                 else:
-                    if st.button(f"↩️ Undo {task['index']} (Go Time)", key=f"go_undo_{task['index']}"):
-                        undo_task(task["index"], from_generated=True)
-                    st.markdown("🎉 *Completed!*")
-    if st.session_state["generated_tasks"] and all(task["completed"] for task in st.session_state["generated_tasks"]):
-        st.balloons()
-        st.success("You completed all tasks in this session!")
-    st.write("🎯 Complete your tasks and press 'Go Time' when ready!")
+                    st.error("Please enter a task title.")
+
+    # Active Tasks
+    st.subheader("Active Tasks")
+    active = get_active_tasks()
+    if active:
+        for task in active:
+            col1, col2, col3, col4 = st.columns([3,1,1,1])
+            with col1:
+                st.write(f"**{task.title}** ({task.duration} min)")
+            with col2:
+                if st.button("Edit", key=f"edit_{task.id}"):
+                    st.session_state[f"edit_{task.id}"] = True
+            with col3:
+                if st.button("Complete", key=f"complete_{task.id}"):
+                    mark_task_complete(task.id)
+                    st.experimental_rerun()
+            with col4:
+                if st.button("Delete", key=f"delete_{task.id}"):
+                    delete_task(task.id)
+                    st.experimental_rerun()
+
+            # Inline Edit Form for the Task
+            if st.session_state.get(f"edit_{task.id}", False):
+                with st.form(f"edit_form_{task.id}"):
+                    new_title_edit = st.text_input("Edit Title", value=task.title)
+                    new_duration_edit = st.number_input("Edit Duration", min_value=5, max_value=120, step=5, value=task.duration)
+                    if st.form_submit_button("Save"):
+                        if new_title_edit.strip():
+                            update_task(task.id, new_title_edit.strip(), new_duration_edit)
+                            st.session_state[f"edit_{task.id}"] = False
+                            st.success("Task updated!")
+                            st.experimental_rerun()
+                        else:
+                            st.error("Task title cannot be empty.")
+    else:
+        st.info("No active tasks.")
+
+    # Completed Tasks
+    st.subheader("Completed Tasks")
+    completed = get_completed_tasks()
+    if completed:
+        for task in completed:
+            col1, col2, col3, col4 = st.columns([3,1,1,1])
+            with col1:
+                st.write(f"~~**{task.title}** ({task.duration} min)~~")
+            with col2:
+                if st.button("Edit", key=f"edit_{task.id}"):
+                    st.session_state[f"edit_{task.id}"] = True
+            with col3:
+                if st.button("Recover", key=f"recover_{task.id}"):
+                    recover_task(task.id)
+                    st.experimental_rerun()
+            with col4:
+                if st.button("Delete", key=f"delete_{task.id}"):
+                    delete_task(task.id)
+                    st.experimental_rerun()
+
+            # Inline Edit Form for Completed Task
+            if st.session_state.get(f"edit_{task.id}", False):
+                with st.form(f"edit_form_{task.id}"):
+                    new_title_edit = st.text_input("Edit Title", value=task.title)
+                    new_duration_edit = st.number_input("Edit Duration", min_value=5, max_value=120, step=5, value=task.duration)
+                    if st.form_submit_button("Save"):
+                        if new_title_edit.strip():
+                            update_task(task.id, new_title_edit.strip(), new_duration_edit)
+                            st.session_state[f"edit_{task.id}"] = False
+                            st.success("Task updated!")
+                            st.experimental_rerun()
+                        else:
+                            st.error("Task title cannot be empty.")
+    else:
+        st.info("No completed tasks yet.")
+
+# ------------------------------
+# GO TIME PAGE
+# ------------------------------
+elif page == "Go Time":
+    st.header("Go Time")
+    with st.form("go_time_form"):
+        available_time = st.number_input("How much time do you have? (minutes)", min_value=5, max_value=120, step=5, value=30)
+        submit_go_time = st.form_submit_button("Show Focused Tasks")
+
+    if submit_go_time:
+        total = 0
+        focused_tasks = []
+        # Sort active tasks by duration (shorter first)
+        for task in sorted(get_active_tasks(), key=lambda t: t.duration):
+            if total + task.duration <= available_time:
+                focused_tasks.append(task)
+                total += task.duration
+        st.write(f"**Available Time:** {available_time} minutes")
+        st.write(f"**Total Scheduled:** {total} minutes")
+        if focused_tasks:
+            for task in focused_tasks:
+                col1, col2 = st.columns([3,1])
+                with col1:
+                    st.write(f"**{task.title}** ({task.duration} min)")
+                with col2:
+                    if st.button("Mark Complete", key=f"go_complete_{task.id}"):
+                        mark_task_complete(task.id)
+                        st.experimental_rerun()
+        else:
+            st.info("No tasks fit into your available time.")
