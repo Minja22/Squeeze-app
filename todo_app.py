@@ -3,6 +3,26 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
+# Inject custom CSS for horizontal button rows
+st.markdown("""
+<style>
+/* Force the button row to remain horizontal */
+.button-row {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+.button-row > div {
+    flex: 1;
+    min-width: 50px;
+    text-align: center;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Big centered header for the app
 st.markdown("<h1 style='text-align: center;'>SQUEEZE</h1>", unsafe_allow_html=True)
 
@@ -63,7 +83,7 @@ def generate_optimized_tasks(time_available):
             total += task["estimated_time"]
     return optimized
 
-# --- Optimized Task List ---
+# --- Optimized Task List (displayed at the top) ---
 if st.session_state.optimized_tasks and all(task["completed"] for task in st.session_state.optimized_tasks):
     st.session_state.optimized_tasks = []
 
@@ -78,16 +98,20 @@ if st.session_state.optimized_tasks:
             f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
             unsafe_allow_html=True,
         )
-        btn_cols = st.columns(3)
-        with btn_cols[0]:
-            if st.button("✔", key=f"opt_complete_{task['id']}"):
-                toggle_complete(task["id"])
-        with btn_cols[1]:
-            if st.button("⭐" if task["starred"] else "☆", key=f"opt_star_{task['id']}"):
-                toggle_star(task["id"])
-        with btn_cols[2]:
-            if st.button("🗑", key=f"opt_delete_{task['id']}"):
-                delete_task(task["id"])
+        # Button row for optimized tasks
+        with st.container():
+            st.markdown("<div class='button-row'>", unsafe_allow_html=True)
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if st.button("✔", key=f"opt_complete_{task['id']}"):
+                    toggle_complete(task["id"])
+            with col2:
+                if st.button("⭐" if task["starred"] else "☆", key=f"opt_star_{task['id']}"):
+                    toggle_star(task["id"])
+            with col3:
+                if st.button("🗑", key=f"opt_delete_{task['id']}"):
+                    delete_task(task["id"])
+            st.markdown("</div>", unsafe_allow_html=True)
     total_time = sum(task["estimated_time"] for task in st.session_state.optimized_tasks)
     st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
 st.markdown("---")
@@ -155,15 +179,18 @@ for task in st.session_state.tasks:
         f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
         unsafe_allow_html=True,
     )
-    # Create a separate row for buttons, arranged horizontally
-    btn_row = st.columns(3)
-    with btn_row[0]:
-        if st.button("✔", key=f"complete_{task['id']}"):
-            toggle_complete(task["id"])
-    with btn_row[1]:
-        if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
-            toggle_star(task["id"])
-    with btn_row[2]:
-        if st.button("🗑", key=f"delete_{task['id']}"):
-            delete_task(task["id"])
+    # Create a container for the button row and force horizontal layout via our custom CSS.
+    with st.container():
+        st.markdown("<div class='button-row'>", unsafe_allow_html=True)
+        btn_cols = st.columns(3)
+        with btn_cols[0]:
+            if st.button("✔", key=f"complete_{task['id']}"):
+                toggle_complete(task["id"])
+        with btn_cols[1]:
+            if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
+                toggle_star(task["id"])
+        with btn_cols[2]:
+            if st.button("🗑", key=f"delete_{task['id']}"):
+                delete_task(task["id"])
+        st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("---")
