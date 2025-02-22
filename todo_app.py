@@ -112,9 +112,9 @@ if st.session_state.show_task_input:
         step=5,
         key="new_task_time"
     )
-    input_cols = st.columns([1,1])
+    input_cols = st.columns([1, 1])
     with input_cols[0]:
-        if st.button("➕", key="add_task_button"):
+        if st.button("Add", key="add_task_button"):
             if new_task_title:
                 add_task(new_task_title, new_task_time)
     with input_cols[1]:
@@ -127,15 +127,21 @@ if st.session_state.go_time_prompt:
     time_value = st.slider(
         "Available Time (mins)",
         min_value=5,
-        max_value=480,
+        max_value=120,  # max is 2 hours (120 minutes)
         value=30,
         step=5,
         key="time_slider"
     )
-    if st.button("Generate Optimized List", key="generate_optimized"):
-        st.session_state.optimized_tasks = generate_optimized_tasks(time_value)
-        st.session_state.go_time_prompt = False
-        st.rerun()
+    prompt_cols = st.columns([1,1])
+    with prompt_cols[0]:
+        if st.button("Generate Optimized List", key="generate_optimized"):
+            st.session_state.optimized_tasks = generate_optimized_tasks(time_value)
+            st.session_state.go_time_prompt = False
+            st.rerun()
+    with prompt_cols[1]:
+        if st.button("Cancel", key="cancel_time_button"):
+            st.session_state.go_time_prompt = False
+            st.rerun()
 
 st.markdown("---")
 
