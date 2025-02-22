@@ -3,36 +3,8 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
-# Custom CSS to reduce stacking on small screens:
-# 1) Force the columns for each row to stay on one line (no wrap).
-# 2) Give a min-width to the button columns so they don't collapse or wrap.
-st.markdown("""
-<style>
-/* Center the main header on all screen sizes */
-h1 {
-    text-align: center;
-}
-
-/* Force columns within a row to stay side by side (no wrap) */
-[data-testid="stHorizontalBlock"] > div > div {
-    flex-wrap: nowrap !important;
-}
-
-/* Try to give each column a fixed ratio and min-width */
-[data-testid="column"]:nth-of-type(1) {
-    flex: 2 2 0% !important; /* The wide column for task text */
-}
-[data-testid="column"]:nth-of-type(2),
-[data-testid="column"]:nth-of-type(3),
-[data-testid="column"]:nth-of-type(4) {
-    flex: 1 1 0% !important; /* The smaller columns for buttons */
-    min-width: 60px !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
 # Big centered header for the app
-st.markdown("<h1>SQUEEZE</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>SQUEEZE</h1>", unsafe_allow_html=True)
 
 # Initialize session state variables if not already set
 if "tasks" not in st.session_state:
@@ -53,7 +25,7 @@ def add_task(title, estimated_time):
         "starred": False,
     }
     st.session_state.tasks.append(task)
-    st.session_state.show_task_input = False  # hide task input after adding
+    st.session_state.show_task_input = False
     st.rerun()
 
 def toggle_complete(task_id):
@@ -81,19 +53,17 @@ def generate_optimized_tasks(time_available):
     
     optimized = []
     total = 0
-    # Add starred tasks first
     for task in starred:
         if total + task["estimated_time"] <= time_available:
             optimized.append(task)
             total += task["estimated_time"]
-    # Then add non-starred tasks
     for task in non_starred:
         if total + task["estimated_time"] <= time_available:
             optimized.append(task)
             total += task["estimated_time"]
     return optimized
 
-# --- Optimized Task List (displayed at the very top) ---
+# --- Optimized Task List ---
 if st.session_state.optimized_tasks and all(task["completed"] for task in st.session_state.optimized_tasks):
     st.session_state.optimized_tasks = []
 
@@ -103,17 +73,21 @@ if st.session_state.optimized_tasks:
         st.session_state.optimized_tasks = []
         st.rerun()
     for task in st.session_state.optimized_tasks:
-        col1, col2 = st.columns([6, 1])
-        with col1:
-            task_color = "#FFA500" if not task["completed"] else "#32CD32"
-            st.markdown(
-                f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> "
-                f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
-                unsafe_allow_html=True,
-            )
-        with col2:
+        st.markdown(
+            f"<span style='color:{'#FFA500' if not task['completed'] else '#32CD32'}; font-size:20px;'>{task['title']}</span> "
+            f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
+            unsafe_allow_html=True,
+        )
+        btn_cols = st.columns(3)
+        with btn_cols[0]:
             if st.button("✔", key=f"opt_complete_{task['id']}"):
                 toggle_complete(task["id"])
+        with btn_cols[1]:
+            if st.button("⭐" if task["starred"] else "☆", key=f"opt_star_{task['id']}"):
+                toggle_star(task["id"])
+        with btn_cols[2]:
+            if st.button("🗑", key=f"opt_delete_{task['id']}"):
+                delete_task(task["id"])
     total_time = sum(task["estimated_time"] for task in st.session_state.optimized_tasks)
     st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
 st.markdown("---")
@@ -129,7 +103,7 @@ with cols[1]:
         st.session_state.go_time_prompt = not st.session_state.go_time_prompt
         st.rerun()
 
-# --- Input Fields Below the Button Row ---
+# --- Task Input Fields ---
 if st.session_state.show_task_input:
     new_task_title = st.text_input("Task Title", key="new_task_title")
     new_task_time = st.number_input(
@@ -140,33 +114,33 @@ if st.session_state.show_task_input:
         step=5,
         key="new_task_time"
     )
-    input_cols = st.columns([1, 1])
-    with input_cols[0]:
+    inp_cols = st.columns(2)
+    with inp_cols[0]:
         if st.button("Add", key="add_task_button"):
             if new_task_title:
                 add_task(new_task_title, new_task_time)
-    with input_cols[1]:
+    with inp_cols[1]:
         if st.button("Cancel", key="cancel_task_button"):
             st.session_state.show_task_input = False
             st.rerun()
 
-# --- Available Time Prompt directly below "Let's Go" ---
+# --- Available Time Prompt ---
 if st.session_state.go_time_prompt:
     time_value = st.slider(
         "Available Time (mins)",
         min_value=5,
-        max_value=120,  # max is 2 hours (120 minutes)
+        max_value=120,
         value=30,
         step=5,
         key="time_slider"
     )
-    prompt_cols = st.columns([1,1])
-    with prompt_cols[0]:
+    time_cols = st.columns(2)
+    with time_cols[0]:
         if st.button("Generate Optimized List", key="generate_optimized"):
             st.session_state.optimized_tasks = generate_optimized_tasks(time_value)
             st.session_state.go_time_prompt = False
             st.rerun()
-    with prompt_cols[1]:
+    with time_cols[1]:
         if st.button("Cancel", key="cancel_time_button"):
             st.session_state.go_time_prompt = False
             st.rerun()
@@ -176,22 +150,20 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    # We set a 2:1:1:1 ratio so the text is wide, and each button column is narrower.
-    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
-    with col1:
-        task_color = "#FFA500" if not task["completed"] else "#32CD32"
-        st.markdown(
-            f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> "
-            f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
-            unsafe_allow_html=True,
-        )
-    with col2:
+    st.markdown(
+        f"<span style='color:{'#FFA500' if not task['completed'] else '#32CD32'}; font-size:20px;'>{task['title']}</span> "
+        f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
+        unsafe_allow_html=True,
+    )
+    # Create a separate row for buttons, arranged horizontally
+    btn_row = st.columns(3)
+    with btn_row[0]:
         if st.button("✔", key=f"complete_{task['id']}"):
             toggle_complete(task["id"])
-    with col3:
+    with btn_row[1]:
         if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
             toggle_star(task["id"])
-    with col4:
+    with btn_row[2]:
         if st.button("🗑", key=f"delete_{task['id']}"):
             delete_task(task["id"])
 st.markdown("---")
