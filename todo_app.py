@@ -10,6 +10,8 @@ if "optimized_tasks" not in st.session_state:
     st.session_state.optimized_tasks = []
 if "go_time_prompt" not in st.session_state:
     st.session_state.go_time_prompt = False
+if "show_task_input" not in st.session_state:
+    st.session_state.show_task_input = False
 
 def add_task(title, estimated_time):
     task = {
@@ -20,6 +22,7 @@ def add_task(title, estimated_time):
         "starred": False,
     }
     st.session_state.tasks.append(task)
+    st.session_state.show_task_input = False  # hide task input after adding
     st.rerun()
 
 def toggle_complete(task_id):
@@ -39,18 +42,15 @@ def delete_task(task_id):
     st.rerun()
 
 def generate_optimized_tasks(time_available):
-    # Filter pending tasks
     pending_tasks = [task for task in st.session_state.tasks if not task["completed"]]
-    # Separate starred vs non-starred
     starred = [t for t in pending_tasks if t["starred"]]
     non_starred = [t for t in pending_tasks if not t["starred"]]
-    # Sort by estimated time (ascending)
     starred.sort(key=lambda x: x["estimated_time"])
     non_starred.sort(key=lambda x: x["estimated_time"])
     
     optimized = []
     total = 0
-    # First, add starred tasks if they fit
+    # Add starred tasks first
     for task in starred:
         if total + task["estimated_time"] <= time_available:
             optimized.append(task)
@@ -62,18 +62,7 @@ def generate_optimized_tasks(time_available):
             total += task["estimated_time"]
     return optimized
 
-# --- Task Creation Prompt at the Top ---
-st.markdown("## Create a New Task")
-new_task_title = st.text_input("Enter Task Title", key="new_task_title")
-new_task_time = st.number_input("Estimated Time (minutes)", min_value=1, max_value=120, value=5, step=5, key="new_task_time")
-if st.button("Add Task"):
-    if new_task_title:
-        add_task(new_task_title, new_task_time)
-
-st.markdown("---")
-
-# --- Optimized Task List (displayed at the very top if available) ---
-# Clear optimized list if all tasks are complete.
+# --- Optimized Task List (at the very top) ---
 if st.session_state.optimized_tasks and all(task["completed"] for task in st.session_state.optimized_tasks):
     st.session_state.optimized_tasks = []
 
@@ -87,7 +76,7 @@ if st.session_state.optimized_tasks:
         with col1:
             task_color = "#FFA500" if not task["completed"] else "#32CD32"
             st.markdown(
-                f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> " +
+                f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> "
                 f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
                 unsafe_allow_html=True,
             )
@@ -96,7 +85,27 @@ if st.session_state.optimized_tasks:
                 toggle_complete(task["id"])
     total_time = sum(task["estimated_time"] for task in st.session_state.optimized_tasks)
     st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
+st.markdown("---")
 
+# --- Task Creation Prompt (hidden until user taps "+") ---
+st.markdown("## Create a New Task")
+if not st.session_state.show_task_input:
+    if st.button("+", key="show_task_input"):
+        st.session_state.show_task_input = True
+        st.experimental_rerun()  # refresh to show input fields
+else:
+    new_task_title = st.text_input("Enter Task Title", key="new_task_title")
+    new_task_time = st.number_input(
+        "Estimated Time (minutes)",
+        min_value=1,
+        max_value=120,
+        value=5,
+        step=1,
+        key="new_task_time"
+    )
+    if st.button("+", key="add_task"):
+        if new_task_title:
+            add_task(new_task_title, new_task_time)
 st.markdown("---")
 
 # --- Master Task List ---
@@ -106,7 +115,7 @@ for task in st.session_state.tasks:
     with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
-            f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> " +
+            f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> "
             f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
             unsafe_allow_html=True,
         )
@@ -119,17 +128,17 @@ for task in st.session_state.tasks:
     with col4:
         if st.button("🗑", key=f"delete_{task['id']}"):
             delete_task(task["id"])
-
 st.markdown("---")
 
 # --- "Let's Go" and Time Prompt (at the bottom) ---
 if st.session_state.go_time_prompt:
-    time_value = st.number_input(
+    time_value = st.slider(
         "How much time do you have? (in minutes)",
-        min_value=1,
+        min_value=5,
         max_value=480,
         value=30,
-        key="time_input"
+        step=5,
+        key="time_slider"
     )
     if st.button("Generate Optimized List", key="generate_optimized"):
         st.session_state.optimized_tasks = generate_optimized_tasks(time_value)
