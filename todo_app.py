@@ -3,37 +3,33 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
-# Custom CSS to help keep columns side by side on small screens
-st.markdown(
-    """
-    <style>
-    /* Center the main header on all screen sizes */
-    h1 {
-        text-align: center;
-    }
+# Custom CSS to reduce stacking on small screens:
+# 1) Force the columns for each row to stay on one line (no wrap).
+# 2) Give a min-width to the button columns so they don't collapse or wrap.
+st.markdown("""
+<style>
+/* Center the main header on all screen sizes */
+h1 {
+    text-align: center;
+}
 
-    /* Attempt to override the default stacking of columns on narrow screens */
-    @media (max-width: 600px) {
-        /* 
-         * Force columns to remain side by side by constraining their width.
-         * The data-testid="column" attribute is used by Streamlit for each column container.
-         * This may need updating if Streamlit changes its internal DOM structure.
-         */
-        div[data-testid="column"]:nth-of-type(1) {
-            flex: 1 1 auto !important;
-        }
-        div[data-testid="column"]:nth-of-type(2),
-        div[data-testid="column"]:nth-of-type(3),
-        div[data-testid="column"]:nth-of-type(4) {
-            flex: 0 0 auto !important;
-            width: 50px !important;
-            min-width: 50px !important;
-        }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+/* Force columns within a row to stay side by side (no wrap) */
+[data-testid="stHorizontalBlock"] > div > div {
+    flex-wrap: nowrap !important;
+}
+
+/* Try to give each column a fixed ratio and min-width */
+[data-testid="column"]:nth-of-type(1) {
+    flex: 2 2 0% !important; /* The wide column for task text */
+}
+[data-testid="column"]:nth-of-type(2),
+[data-testid="column"]:nth-of-type(3),
+[data-testid="column"]:nth-of-type(4) {
+    flex: 1 1 0% !important; /* The smaller columns for buttons */
+    min-width: 60px !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # Big centered header for the app
 st.markdown("<h1>SQUEEZE</h1>", unsafe_allow_html=True)
@@ -180,8 +176,8 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    # The columns below will attempt to remain side-by-side thanks to the custom CSS above.
-    col1, col2, col3, col4 = st.columns([6, 1, 1, 1])
+    # We set a 2:1:1:1 ratio so the text is wide, and each button column is narrower.
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
     with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
