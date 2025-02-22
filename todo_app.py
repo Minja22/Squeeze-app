@@ -8,8 +8,6 @@ if "tasks" not in st.session_state:
     st.session_state.tasks = []
 if "optimized_tasks" not in st.session_state:
     st.session_state.optimized_tasks = []
-if "time_available" not in st.session_state:
-    st.session_state.time_available = 30  # default value
 if "go_time_prompt" not in st.session_state:
     st.session_state.go_time_prompt = False
 
@@ -58,21 +56,22 @@ st.markdown("# Squeeze - Smart To-Do List")
 # Activate the time prompt when "Go Time" is clicked.
 if st.button("Go Time"):
     st.session_state.go_time_prompt = True
+    st.rerun()
 
 # Display the time prompt if active.
 if st.session_state.go_time_prompt:
-    # Use a unique key to let Streamlit manage the widget state.
-    st.session_state.time_available = st.number_input(
+    # Let the number input manage its state via a unique key.
+    time_value = st.number_input(
         "How much time do you have? (in minutes)",
         min_value=1,
         max_value=480,
-        value=st.session_state.time_available,
+        value=30,
         key="time_input"
     )
-    if st.button("Generate Optimized List"):
-        st.session_state.optimized_tasks = generate_optimized_tasks(st.session_state.time_available)
+    if st.button("Generate Optimized List", key="generate_optimized"):
+        st.session_state.optimized_tasks = generate_optimized_tasks(time_value)
         st.session_state.go_time_prompt = False
-        # Removing st.rerun() here allows the number input value to persist correctly.
+        # No st.rerun() here so that the widget's value persists naturally.
 
 st.markdown("## Master Task List")
 for task in st.session_state.tasks:
@@ -91,30 +90,3 @@ for task in st.session_state.tasks:
             toggle_star(task["id"])
     with col4:
         if st.button("🗑", key=f"delete_{task['id']}"):
-            delete_task(task["id"])
-
-st.markdown("---")
-
-if st.session_state.optimized_tasks:
-    st.markdown("## Optimized Task List")
-    for task in st.session_state.optimized_tasks:
-        col1, col2 = st.columns([6, 1])
-        with col1:
-            task_color = "#FFA500" if not task["completed"] else "#32CD32"
-            st.markdown(
-                f"<span style='color:{task_color}; font-size:20px;'>{task['title']} ({task['estimated_time']} mins)</span>",
-                unsafe_allow_html=True,
-            )
-        with col2:
-            if st.button("✔", key=f"opt_complete_{task['id']}"):
-                # This will update the task in the master list.
-                toggle_complete(task["id"])
-    total_time = sum(task["estimated_time"] for task in st.session_state.optimized_tasks)
-    st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
-
-st.markdown("---")
-
-new_task_title = st.text_input("Enter Task Title", "")
-new_task_time = st.number_input("Estimated Time (minutes)", min_value=1, max_value=120, value=5, step=5, key="new_task_time")
-if st.button("Add Task") and new_task_title:
-    add_task(new_task_title, new_task_time)
