@@ -92,7 +92,7 @@ st.markdown("## Create a New Task")
 if not st.session_state.show_task_input:
     if st.button("+", key="show_task_input_button"):
         st.session_state.show_task_input = True
-        st.experimental_rerun()  # refresh to show input fields
+        st.rerun()  # refresh to show input fields
 else:
     new_task_title = st.text_input("Enter Task Title", key="new_task_title")
     new_task_time = st.number_input(
