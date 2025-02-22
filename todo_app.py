@@ -62,14 +62,23 @@ def generate_optimized_tasks(time_available):
             total += task["estimated_time"]
     return optimized
 
-# --- Optimized Task List (displayed at the top) ---
-# Clear the optimized list if all its tasks are complete.
+# --- Task Creation Prompt at the Top ---
+st.markdown("## Create a New Task")
+new_task_title = st.text_input("Enter Task Title", key="new_task_title")
+new_task_time = st.number_input("Estimated Time (minutes)", min_value=1, max_value=120, value=5, step=5, key="new_task_time")
+if st.button("Add Task"):
+    if new_task_title:
+        add_task(new_task_title, new_task_time)
+
+st.markdown("---")
+
+# --- Optimized Task List (displayed at the very top if available) ---
+# Clear optimized list if all tasks are complete.
 if st.session_state.optimized_tasks and all(task["completed"] for task in st.session_state.optimized_tasks):
     st.session_state.optimized_tasks = []
 
 if st.session_state.optimized_tasks:
     st.markdown("## Optimized Task List")
-    # "Out of Time" button to remove the optimized list manually
     if st.button("Out of Time", key="out_of_time"):
         st.session_state.optimized_tasks = []
         st.rerun()
@@ -78,7 +87,8 @@ if st.session_state.optimized_tasks:
         with col1:
             task_color = "#FFA500" if not task["completed"] else "#32CD32"
             st.markdown(
-                f"<span style='color:{task_color}; font-size:20px;'>{task['title']} ({task['estimated_time']} mins)</span>",
+                f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> " +
+                f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
                 unsafe_allow_html=True,
             )
         with col2:
@@ -96,7 +106,8 @@ for task in st.session_state.tasks:
     with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
-            f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span>",
+            f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> " +
+            f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
             unsafe_allow_html=True,
         )
     with col2:
@@ -130,9 +141,3 @@ else:
         st.rerun()
 
 st.markdown("---")
-
-# --- New Task Input ---
-new_task_title = st.text_input("Enter Task Title", "")
-new_task_time = st.number_input("Estimated Time (minutes)", min_value=1, max_value=120, value=5, step=5, key="new_task_time")
-if st.button("Add Task") and new_task_title:
-    add_task(new_task_title, new_task_time)
