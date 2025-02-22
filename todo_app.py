@@ -87,29 +87,35 @@ if st.session_state.optimized_tasks:
     st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
 st.markdown("---")
 
-# --- Task Creation Prompt (hidden until user taps the plus button) ---
-st.markdown("## Create a New Task")
-if not st.session_state.show_task_input:
-    if st.button("➕", key="show_task_input_button"):
-        st.session_state.show_task_input = True
-        st.rerun()  # refresh to show input fields
-else:
-    new_task_title = st.text_input("Enter Task Title", key="new_task_title")
-    new_task_time = st.number_input(
-        "Estimated Time (minutes)",
-        min_value=1,
-        max_value=120,
-        value=5,
-        step=1,
-        key="new_task_time"
-    )
-    if st.button("➕", key="add_task"):
-        if new_task_title:
-            add_task(new_task_title, new_task_time)
+# --- Task Creation & "Let's Go" Buttons Row ---
+cols = st.columns([1, 1])
+with cols[0]:
+    if not st.session_state.show_task_input:
+        if st.button("➕", key="show_task_input_button"):
+            st.session_state.show_task_input = True
+            st.rerun()  # refresh to show input fields
+    else:
+        new_task_title = st.text_input("Task Title", key="new_task_title")
+        new_task_time = st.number_input(
+            "Time (mins)",
+            min_value=1,
+            max_value=120,
+            value=5,
+            step=1,
+            key="new_task_time"
+        )
+        if st.button("➕", key="add_task"):
+            if new_task_title:
+                add_task(new_task_title, new_task_time)
+with cols[1]:
+    if st.button("Let's Go", key="lets_go"):
+        st.session_state.go_time_prompt = True
+        st.rerun()
+
 st.markdown("---")
 
-# --- Master Task List ---
-st.markdown("## Master Task List")
+# --- To Do (Master Task List) ---
+st.markdown("## To Do")
 for task in st.session_state.tasks:
     col1, col2, col3, col4 = st.columns([6, 1, 1, 1])
     with col1:
@@ -130,10 +136,10 @@ for task in st.session_state.tasks:
             delete_task(task["id"])
 st.markdown("---")
 
-# --- "Let's Go" and Time Prompt (at the bottom) ---
+# --- "Let's Go" Time Prompt (at the bottom) ---
 if st.session_state.go_time_prompt:
     time_value = st.slider(
-        "How much time do you have? (in minutes)",
+        "Available Time (mins)",
         min_value=5,
         max_value=480,
         value=30,
@@ -143,10 +149,6 @@ if st.session_state.go_time_prompt:
     if st.button("Generate Optimized List", key="generate_optimized"):
         st.session_state.optimized_tasks = generate_optimized_tasks(time_value)
         st.session_state.go_time_prompt = False
-        st.rerun()
-else:
-    if st.button("Let's Go", key="lets_go"):
-        st.session_state.go_time_prompt = True
         st.rerun()
 
 st.markdown("---")
