@@ -55,28 +55,25 @@ def generate_optimized_tasks(time_available):
 
 st.markdown("# Squeeze - Smart To-Do List")
 
-# When the user clicks "Go Time", activate the time prompt
+# Activate the time prompt when "Go Time" is clicked.
 if st.button("Go Time"):
     st.session_state.go_time_prompt = True
-    st.rerun()
 
-# Display the time prompt if active
+# Display the time prompt if active.
 if st.session_state.go_time_prompt:
-    # Use a unique key for the number input to prevent reinitialization issues
-    time_value = st.number_input(
+    # Use a unique key to let Streamlit manage the widget state.
+    st.session_state.time_available = st.number_input(
         "How much time do you have? (in minutes)",
         min_value=1,
         max_value=480,
         value=st.session_state.time_available,
         key="time_input"
     )
-    st.session_state.time_available = time_value  # update session state with current value
     if st.button("Generate Optimized List"):
         st.session_state.optimized_tasks = generate_optimized_tasks(st.session_state.time_available)
-        st.session_state.go_time_prompt = False  # hide prompt after generating list
-        st.rerun()
+        st.session_state.go_time_prompt = False
+        # Removing st.rerun() here allows the number input value to persist correctly.
 
-# Display the Master Task List
 st.markdown("## Master Task List")
 for task in st.session_state.tasks:
     col1, col2, col3, col4 = st.columns([6, 1, 1, 1])
@@ -98,7 +95,6 @@ for task in st.session_state.tasks:
 
 st.markdown("---")
 
-# Display the Optimized Task List if available
 if st.session_state.optimized_tasks:
     st.markdown("## Optimized Task List")
     for task in st.session_state.optimized_tasks:
@@ -111,7 +107,7 @@ if st.session_state.optimized_tasks:
             )
         with col2:
             if st.button("✔", key=f"opt_complete_{task['id']}"):
-                # This will update the task in the master list
+                # This will update the task in the master list.
                 toggle_complete(task["id"])
     total_time = sum(task["estimated_time"] for task in st.session_state.optimized_tasks)
     st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
@@ -119,6 +115,6 @@ if st.session_state.optimized_tasks:
 st.markdown("---")
 
 new_task_title = st.text_input("Enter Task Title", "")
-new_task_time = st.number_input("Estimated Time (minutes)", min_value=1, max_value=120, value=5, step=5)
+new_task_time = st.number_input("Estimated Time (minutes)", min_value=1, max_value=120, value=5, step=5, key="new_task_time")
 if st.button("Add Task") and new_task_title:
     add_task(new_task_title, new_task_time)
