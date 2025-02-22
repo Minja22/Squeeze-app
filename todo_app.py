@@ -87,10 +87,10 @@ if st.session_state.optimized_tasks:
     st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
 st.markdown("---")
 
-# --- Task Creation Prompt (hidden until user taps "+") ---
+# --- Task Creation Prompt (hidden until user taps the plus button) ---
 st.markdown("## Create a New Task")
 if not st.session_state.show_task_input:
-    if st.button("+", key="show_task_input_button"):
+    if st.button("➕", key="show_task_input_button"):
         st.session_state.show_task_input = True
         st.rerun()  # refresh to show input fields
 else:
@@ -103,7 +103,7 @@ else:
         step=1,
         key="new_task_time"
     )
-    if st.button("+", key="add_task"):
+    if st.button("➕", key="add_task"):
         if new_task_title:
             add_task(new_task_title, new_task_time)
 st.markdown("---")
