@@ -90,7 +90,7 @@ st.markdown("---")
 # --- Task Creation Prompt (hidden until user taps "+") ---
 st.markdown("## Create a New Task")
 if not st.session_state.show_task_input:
-    if st.button("+", key="show_task_input"):
+    if st.button("+", key="show_task_input_button"):
         st.session_state.show_task_input = True
         st.experimental_rerun()  # refresh to show input fields
 else:
