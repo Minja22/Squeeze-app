@@ -3,6 +3,23 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
+# Custom CSS to force horizontal layout for button groups on mobile
+st.markdown(
+    """
+    <style>
+    /* This targets the container created by st.columns */
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: nowrap !important;
+    }
+    /* Also prevent buttons from wrapping their text */
+    .stButton > button {
+        white-space: nowrap;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # Big centered header for the app
 st.markdown("<h1 style='text-align: center;'>SQUEEZE</h1>", unsafe_allow_html=True)
 
@@ -109,7 +126,7 @@ if st.session_state.show_task_input:
         min_value=1,
         max_value=120,
         value=5,
-        step=5,
+        step=5,  # Estimated time adjusts in increments of 5
         key="new_task_time"
     )
     input_cols = st.columns([1, 1])
@@ -132,7 +149,7 @@ if st.session_state.go_time_prompt:
         step=5,
         key="time_slider"
     )
-    prompt_cols = st.columns([1,1])
+    prompt_cols = st.columns([1, 1])
     with prompt_cols[0]:
         if st.button("Generate Optimized List", key="generate_optimized"):
             st.session_state.optimized_tasks = generate_optimized_tasks(time_value)
