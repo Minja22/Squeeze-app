@@ -104,7 +104,6 @@ with cols[1]:
 # --- Input Fields Below the Button Row ---
 if st.session_state.show_task_input:
     new_task_title = st.text_input("Task Title", key="new_task_title")
-    # Estimated time now increments in steps of 5 minutes.
     new_task_time = st.number_input(
         "Time (mins)",
         min_value=1,
@@ -113,9 +112,15 @@ if st.session_state.show_task_input:
         step=5,
         key="new_task_time"
     )
-    if st.button("➕", key="add_task_button"):
-        if new_task_title:
-            add_task(new_task_title, new_task_time)
+    input_cols = st.columns([1,1])
+    with input_cols[0]:
+        if st.button("➕", key="add_task_button"):
+            if new_task_title:
+                add_task(new_task_title, new_task_time)
+    with input_cols[1]:
+        if st.button("Cancel", key="cancel_task_button"):
+            st.session_state.show_task_input = False
+            st.rerun()
 
 # --- Available Time Prompt directly below "Let's Go" ---
 if st.session_state.go_time_prompt:
