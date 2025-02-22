@@ -62,12 +62,15 @@ if st.button("Go Time"):
 
 # Display the time prompt if active
 if st.session_state.go_time_prompt:
-    st.session_state.time_available = st.number_input(
+    # Use a unique key for the number input to prevent reinitialization issues
+    time_value = st.number_input(
         "How much time do you have? (in minutes)",
         min_value=1,
         max_value=480,
         value=st.session_state.time_available,
+        key="time_input"
     )
+    st.session_state.time_available = time_value  # update session state with current value
     if st.button("Generate Optimized List"):
         st.session_state.optimized_tasks = generate_optimized_tasks(st.session_state.time_available)
         st.session_state.go_time_prompt = False  # hide prompt after generating list
