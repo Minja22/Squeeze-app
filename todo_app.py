@@ -3,6 +3,26 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
+# Custom CSS to optimize for mobile
+st.markdown("""
+<style>
+/* Ensure the container has some padding on small screens */
+@media only screen and (max-width: 600px) {
+    .css-1d391kg, .css-18e3th9 {  /* These classes control the container padding; may change with Streamlit versions */
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    h1 {
+        font-size: 2rem !important;
+    }
+    .stButton>button {
+        font-size: 1rem !important;
+        padding: 0.5rem 1rem !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Big centered header for the app
 st.markdown("<h1 style='text-align: center;'>SQUEEZE</h1>", unsafe_allow_html=True)
 
