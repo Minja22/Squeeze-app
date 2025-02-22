@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 
 # Initialize session state variables
 if "tasks" not in st.session_state:
@@ -35,6 +34,7 @@ def undo_task(index, from_generated=False):
 def generate_task_list(available_time):
     st.session_state["generated_tasks"] = []
     total_time = 0
+    # Iterate over tasks sorted by duration and get the master list index.
     for task in sorted(st.session_state["tasks"], key=lambda x: x["duration"]):
         master_index = st.session_state["tasks"].index(task)
         if total_time + task["duration"] <= available_time and not task["completed"]:
@@ -45,7 +45,7 @@ def generate_task_list(available_time):
 def toggle_theme():
     st.session_state["dark_mode"] = not st.session_state["dark_mode"]
 
-# Optionally apply dark mode styling
+# Optional: Apply dark mode styling if enabled
 if st.session_state["dark_mode"]:
     st.markdown("""
     <style>
@@ -58,12 +58,13 @@ if st.session_state["dark_mode"]:
 if st.session_state["page"] == "main":
     st.title("Squeeze: Time-Based Task Manager")
     
+    # Theme Toggle button
     if st.button("Toggle Dark Mode 🌙/☀️"):
         toggle_theme()
-
+    
     st.subheader("Your Ongoing Task List")
     
-    # Display the master task list
+    # Display the current tasks
     if st.session_state["tasks"]:
         for index, task in enumerate(st.session_state["tasks"]):
             col1, col2, col3 = st.columns([6, 2, 2])
@@ -84,39 +85,43 @@ if st.session_state["page"] == "main":
     st.markdown("---")
     st.markdown("### Tap to Add a New Task")
     
-    # Custom HTML component for gesture detection
-    tap_html = """
-    <html>
-      <head>
-        <script>
-          function handleTap() {
-             Streamlit.setComponentValue("tapped");
-          }
-          document.addEventListener('DOMContentLoaded', function() {
-             document.getElementById("tapArea").addEventListener("click", handleTap);
-          });
-        </script>
-      </head>
-      <body>
-        <div id="tapArea" style="width:100%; height:200px; border:2px dashed #ccc; display:flex; align-items:center; justify-content:center;">
-           <h2 style="font-weight:300;">Tap Here to Add a New Task</h2>
-        </div>
-      </body>
-    </html>
-    """
-    tap_result = components.html(tap_html, height=250)
-    if tap_result == "tapped":
-        st.session_state["show_modal"] = True
+    # Tap area using an invisible button styled with custom CSS
+    st.markdown("""
+    <style>
+    .tap-area {
+        width: 100%;
+        height: 200px;
+        border: 2px dashed #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    .tap-button > button {
+        background-color: transparent;
+        border: none;
+        width: 100%;
+        height: 200px;
+        font-size: 0;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
-    # Modal-like input form triggered by tap
+    st.markdown("<div class='tap-area'>", unsafe_allow_html=True)
+    if st.button("Tap Here to Add a New Task", key="tap_button"):
+        st.session_state["show_modal"] = True
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Modal-like input form triggered by tapping the area
     if st.session_state["show_modal"]:
         st.markdown("### Add Task")
         new_task_title = st.text_input("Task Title", key="new_task_title")
         new_task_duration = st.number_input("Duration (minutes, increments of 5)", min_value=5, step=5, key="new_task_duration")
-        if st.button("Done"):
+        if st.button("Done", key="modal_done"):
             add_task(new_task_title, new_task_duration)
+            st.success(f"Task '{new_task_title}' added!")
             st.session_state["show_modal"] = False
-
+    
     st.markdown("---")
     st.subheader("Go Time!")
     available_time = st.slider("How much time do you have?", 5, 120, 30, 5)
@@ -146,5 +151,4 @@ elif st.session_state["page"] == "go_time":
     if st.session_state["generated_tasks"] and all(task["completed"] for task in st.session_state["generated_tasks"]):
         st.balloons()
         st.success("You completed all tasks in this session!")
-    
     st.write("🎯 Complete your tasks and press 'Go Time' when ready!")
