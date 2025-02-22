@@ -1,56 +1,62 @@
 import streamlit as st
 import uuid
 
-st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
+class Task:
+    def __init__(self, title, estimated_time, is_completed=False, is_starred=False):
+        self.id = str(uuid.uuid4())
+        self.title = title
+        self.estimated_time = estimated_time
+        self.is_completed = is_completed
+        self.is_starred = is_starred
 
-if "tasks" not in st.session_state:
+# Load or initialize tasks
+if 'tasks' not in st.session_state:
     st.session_state.tasks = []
 
 def add_task(title, estimated_time):
-    task = {"id": str(uuid.uuid4()), "title": title, "estimated_time": estimated_time, "completed": False, "starred": False}
-    st.session_state.tasks.append(task)
-    st.rerun()
+    if title:
+        new_task = Task(title, estimated_time)
+        st.session_state.tasks.append(new_task)
 
-def toggle_complete(task_id):
+def toggle_completion(task_id):
     for task in st.session_state.tasks:
-        if task["id"] == task_id:
-            task["completed"] = not task["completed"]
-    st.rerun()
+        if task.id == task_id:
+            task.is_completed = not task.is_completed
+            break
 
 def toggle_star(task_id):
     for task in st.session_state.tasks:
-        if task["id"] == task_id:
-            task["starred"] = not task["starred"]
-    st.rerun()
+        if task.id == task_id:
+            task.is_starred = not task.is_starred
+            break
 
 def delete_task(task_id):
-    st.session_state.tasks = [task for task in st.session_state.tasks if task["id"] != task_id]
-    st.rerun()
+    st.session_state.tasks = [task for task in st.session_state.tasks if task.id != task_id]
 
-st.markdown("# Squeeze - Smart To-Do List")
+# UI Layout
+st.title("Clear-Inspired Task Manager")
 
 if st.button("Go Time"):
-    st.session_state.tasks = sorted(st.session_state.tasks, key=lambda x: (not x["starred"], x["completed"]))
-    st.rerun()
+    # Logic for Go Time execution
+    st.write("Starting focus mode...")
 
-for task in st.session_state.tasks:
-    col1, col2, col3, col4 = st.columns([6, 1, 1, 1])
+# Display tasks
+for task in sorted(st.session_state.tasks, key=lambda t: (not task.is_starred, task.is_completed)):
+    col1, col2, col3, col4 = st.columns([5, 1, 1, 1])
     with col1:
-        task_color = "#FFA500" if not task["completed"] else "#32CD32"
-        st.markdown(f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span>", unsafe_allow_html=True)
+        if st.button(f"{'✔️' if task.is_completed else '⬜'} {task.title}", key=task.id):
+            toggle_completion(task.id)
     with col2:
-        if st.button("✔", key=f"complete_{task['id']}"):
-            toggle_complete(task["id"])
+        if st.button("⭐" if task.is_starred else "☆", key=f"star_{task.id}"):
+            toggle_star(task.id)
     with col3:
-        if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
-            toggle_star(task["id"])
-    with col4:
-        if st.button("🗑", key=f"delete_{task['id']}"):
-            delete_task(task["id"])
+        if st.button("🗑️", key=f"del_{task.id}"):
+            delete_task(task.id)
 
-st.markdown("---")
-
-new_task_title = st.text_input("Enter Task Title", "")
-new_task_time = st.number_input("Estimated Time (minutes)", min_value=1, max_value=120, value=5, step=5)
-if st.button("Add Task") and new_task_title:
-    add_task(new_task_title, new_task_time)
+# Add new task by tapping anywhere
+if st.button("+ Add Task", key="add_task_button"):
+    new_task_title = st.text_input("Task Title")
+    new_task_time = st.number_input("Estimated Time (min)", min_value=1, value=5, step=1)
+    if st.button("Confirm Add"):
+        add_task(new_task_title, new_task_time)
+        st.experimental_rerun()
