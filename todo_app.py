@@ -3,28 +3,40 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
-# Custom CSS to optimize for mobile
-st.markdown("""
-<style>
-/* Ensure the container has some padding on small screens */
-@media only screen and (max-width: 600px) {
-    .css-1d391kg, .css-18e3th9 {  /* These classes control the container padding; may change with Streamlit versions */
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
+# Custom CSS to help keep columns side by side on small screens
+st.markdown(
+    """
+    <style>
+    /* Center the main header on all screen sizes */
     h1 {
-        font-size: 2rem !important;
+        text-align: center;
     }
-    .stButton>button {
-        font-size: 1rem !important;
-        padding: 0.5rem 1rem !important;
+
+    /* Attempt to override the default stacking of columns on narrow screens */
+    @media (max-width: 600px) {
+        /* 
+         * Force columns to remain side by side by constraining their width.
+         * The data-testid="column" attribute is used by Streamlit for each column container.
+         * This may need updating if Streamlit changes its internal DOM structure.
+         */
+        div[data-testid="column"]:nth-of-type(1) {
+            flex: 1 1 auto !important;
+        }
+        div[data-testid="column"]:nth-of-type(2),
+        div[data-testid="column"]:nth-of-type(3),
+        div[data-testid="column"]:nth-of-type(4) {
+            flex: 0 0 auto !important;
+            width: 50px !important;
+            min-width: 50px !important;
+        }
     }
-}
-</style>
-""", unsafe_allow_html=True)
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # Big centered header for the app
-st.markdown("<h1 style='text-align: center;'>SQUEEZE</h1>", unsafe_allow_html=True)
+st.markdown("<h1>SQUEEZE</h1>", unsafe_allow_html=True)
 
 # Initialize session state variables if not already set
 if "tasks" not in st.session_state:
@@ -168,6 +180,7 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
+    # The columns below will attempt to remain side-by-side thanks to the custom CSS above.
     col1, col2, col3, col4 = st.columns([6, 1, 1, 1])
     with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
