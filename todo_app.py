@@ -3,6 +3,7 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
+# Big centered header for the app
 st.markdown("<h1 style='text-align: center;'>SQUEEZE</h1>", unsafe_allow_html=True)
 
 # Initialize session state variables if not already set
@@ -73,20 +74,40 @@ if st.session_state.optimized_tasks:
         st.rerun()
     for task in st.session_state.optimized_tasks:
         st.markdown(
-            f"<span style='color:{'#FFA500' if not task['completed'] else '#32CD32'}; font-size:20px;'>{task['title']}</span> "
-            f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
+            f"**{task['title']}** <small>({task['estimated_time']} mins)</small>",
             unsafe_allow_html=True,
         )
-        with st.expander("Actions"):
-            if st.button("Complete", key=f"opt_complete_{task['id']}"):
-                toggle_complete(task["id"])
-            if st.button("Star" if not task["starred"] else "Unstar", key=f"opt_star_{task['id']}"):
-                toggle_star(task["id"])
-            if st.button("Delete", key=f"opt_delete_{task['id']}"):
-                delete_task(task["id"])
+        # Actions stacked vertically
+        if st.button("Complete", key=f"opt_complete_{task['id']}"):
+            toggle_complete(task["id"])
+        if st.button("Star" if not task["starred"] else "Unstar", key=f"opt_star_{task['id']}"):
+            toggle_star(task["id"])
+        if st.button("Delete", key=f"opt_delete_{task['id']}"):
+            delete_task(task["id"])
         st.markdown("---")
     total_time = sum(task["estimated_time"] for task in st.session_state.optimized_tasks)
     st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
+st.markdown("---")
+
+# --- Navigation Bar at Bottom ---
+st.markdown("### Navigation")
+nav_cols = st.columns(3)
+with nav_cols[0]:
+    if st.button("To Do", key="nav_todo"):
+        st.session_state.show_task_input = False
+        st.session_state.go_time_prompt = False
+        st.rerun()
+with nav_cols[1]:
+    if st.button("Add Task", key="nav_add"):
+        st.session_state.show_task_input = True
+        st.session_state.go_time_prompt = False
+        st.rerun()
+with nav_cols[2]:
+    if st.button("Let's Go", key="nav_go"):
+        st.session_state.go_time_prompt = True
+        st.session_state.show_task_input = False
+        st.rerun()
+
 st.markdown("---")
 
 # --- Input Fields for Task Creation ---
@@ -125,34 +146,14 @@ st.markdown("---")
 st.markdown("## To Do")
 for task in st.session_state.tasks:
     st.markdown(
-        f"<span style='color:{'#FFA500' if not task['completed'] else '#32CD32'}; font-size:20px;'>{task['title']}</span> "
-        f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
+        f"**{task['title']}** <small>({task['estimated_time']} mins)</small>",
         unsafe_allow_html=True,
     )
-    with st.expander("Actions"):
-        if st.button("Complete", key=f"complete_{task['id']}"):
-            toggle_complete(task["id"])
-        if st.button("Star" if not task["starred"] else "Unstar", key=f"star_{task['id']}"):
-            toggle_star(task["id"])
-        if st.button("Delete", key=f"delete_{task['id']}"):
-            delete_task(task["id"])
+    # Vertical layout for action buttons
+    if st.button("Complete", key=f"complete_{task['id']}"):
+        toggle_complete(task["id"])
+    if st.button("Star" if not task["starred"] else "Unstar", key=f"star_{task['id']}"):
+        toggle_star(task["id"])
+    if st.button("Delete", key=f"delete_{task['id']}"):
+        delete_task(task["id"])
     st.markdown("---")
-
-# --- Bottom Navigation Bar ---
-st.markdown("### Navigation")
-nav_cols = st.columns(3)
-with nav_cols[0]:
-    if st.button("To Do", key="nav_todo"):
-        st.session_state.show_task_input = False
-        st.session_state.go_time_prompt = False
-        st.rerun()
-with nav_cols[1]:
-    if st.button("Add Task", key="nav_add"):
-        st.session_state.show_task_input = True
-        st.session_state.go_time_prompt = False
-        st.rerun()
-with nav_cols[2]:
-    if st.button("Let's Go", key="nav_go"):
-        st.session_state.go_time_prompt = True
-        st.session_state.show_task_input = False
-        st.rerun()
