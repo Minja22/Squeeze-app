@@ -3,31 +3,25 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
-# Incorporate the provided CSS snippet for better mobile layout
+# Custom CSS for mobile: force columns to not shrink and allow horizontal scrolling
 st.markdown("""
     <style>
-        div[data-testid="column"] {
-            flex: 0 3 max-content !important;  
-            min-width: min-content;                   
-            justify-content: start !important;
-            margin: -0.3em !important;        
-            padding: 0;          
+        /* Prevent columns from wrapping and force them to keep their intrinsic width */
+        div[data-testid="stHorizontalBlock"] > div {
+            flex: 0 0 auto !important;
+            min-width: 80px;
         }
-        div[data-testid="column"] * {
-            width: fit-content !important;
-            padding: 0.015em;
-            margin: -0.035em;
-            border-radius: 16px;
+        /* If the horizontal block is too wide, allow horizontal scrolling */
+        div[data-testid="stHorizontalBlock"] {
+            overflow-x: auto;
+            white-space: nowrap;
         }
-        div[data-testid="column"] button {
-            height: 1.9em;
-            align-items: center;
-            justify-content: center;
-            padding: 0 0.3em 0 0.3em;
-        }
-        div[data-testid="column"] button * {
-            margin: -0.1em;
-            padding: 0;
+        /* Optionally adjust button font sizes for mobile */
+        @media screen and (max-width: 600px) {
+            .stButton > button {
+                font-size: 12px;
+                padding: 0.25rem 0.5rem;
+            }
         }
     </style>
     """, unsafe_allow_html=True)
