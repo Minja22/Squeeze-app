@@ -1,4 +1,4 @@
-import streamlit as st
+jimport streamlit as st
 import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
