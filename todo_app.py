@@ -3,7 +3,6 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
-# Big centered header for the app
 st.markdown("<h1 style='text-align: center;'>SQUEEZE</h1>", unsafe_allow_html=True)
 
 # Initialize session state variables if not already set
@@ -25,7 +24,7 @@ def add_task(title, estimated_time):
         "starred": False,
     }
     st.session_state.tasks.append(task)
-    st.session_state.show_task_input = False  # hide task input after adding
+    st.session_state.show_task_input = False
     st.rerun()
 
 def toggle_complete(task_id):
@@ -53,19 +52,17 @@ def generate_optimized_tasks(time_available):
     
     optimized = []
     total = 0
-    # Add starred tasks first
     for task in starred:
         if total + task["estimated_time"] <= time_available:
             optimized.append(task)
             total += task["estimated_time"]
-    # Then add non-starred tasks
     for task in non_starred:
         if total + task["estimated_time"] <= time_available:
             optimized.append(task)
             total += task["estimated_time"]
     return optimized
 
-# --- Optimized Task List (displayed at the very top) ---
+# --- Optimized Task List ---
 if st.session_state.optimized_tasks and all(task["completed"] for task in st.session_state.optimized_tasks):
     st.session_state.optimized_tasks = []
 
@@ -80,16 +77,12 @@ if st.session_state.optimized_tasks:
             f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
             unsafe_allow_html=True,
         )
-        # Action buttons for optimized tasks on a separate row:
-        btn_cols = st.columns(3)
-        with btn_cols[0]:
-            if st.button("✔", key=f"opt_complete_{task['id']}"):
+        with st.expander("Actions"):
+            if st.button("Complete", key=f"opt_complete_{task['id']}"):
                 toggle_complete(task["id"])
-        with btn_cols[1]:
-            if st.button("⭐" if task["starred"] else "☆", key=f"opt_star_{task['id']}"):
+            if st.button("Star" if not task["starred"] else "Unstar", key=f"opt_star_{task['id']}"):
                 toggle_star(task["id"])
-        with btn_cols[2]:
-            if st.button("🗑", key=f"opt_delete_{task['id']}"):
+            if st.button("Delete", key=f"opt_delete_{task['id']}"):
                 delete_task(task["id"])
         st.markdown("---")
     total_time = sum(task["estimated_time"] for task in st.session_state.optimized_tasks)
@@ -136,16 +129,12 @@ for task in st.session_state.tasks:
         f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
         unsafe_allow_html=True,
     )
-    # Instead of squeezing buttons horizontally, place them on a separate row
-    btn_cols = st.columns(3)
-    with btn_cols[0]:
-        if st.button("✔", key=f"complete_{task['id']}"):
+    with st.expander("Actions"):
+        if st.button("Complete", key=f"complete_{task['id']}"):
             toggle_complete(task["id"])
-    with btn_cols[1]:
-        if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
+        if st.button("Star" if not task["starred"] else "Unstar", key=f"star_{task['id']}"):
             toggle_star(task["id"])
-    with btn_cols[2]:
-        if st.button("🗑", key=f"delete_{task['id']}"):
+        if st.button("Delete", key=f"delete_{task['id']}"):
             delete_task(task["id"])
     st.markdown("---")
 
@@ -153,7 +142,6 @@ for task in st.session_state.tasks:
 st.markdown("### Navigation")
 nav_cols = st.columns(3)
 with nav_cols[0]:
-    # "To Do" button simply resets the input prompts (i.e. shows the To Do list)
     if st.button("To Do", key="nav_todo"):
         st.session_state.show_task_input = False
         st.session_state.go_time_prompt = False
