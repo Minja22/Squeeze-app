@@ -44,6 +44,7 @@ def toggle_star(task_id):
 
 def delete_task(task_id):
     st.session_state.tasks = [task for task in st.session_state.tasks if task["id"] != task_id]
+    # If the options panel is open for this task, close it.
     if st.session_state.options_for == task_id:
         st.session_state.options_for = None
     st.rerun()
@@ -158,14 +159,20 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    row_cols = st.columns([1, 9])
+    # Two columns: left is the "task name" button (tapping toggles completion),
+    # right is an "Options" button to open the panel for that task.
+    row_cols = st.columns([8, 2])
+    
+    # LEFT COLUMN: Tapping the task name toggles completion
     with row_cols[0]:
-        if st.button("✔", key=f"complete_{task['id']}"):
+        label = f"{task['title']} ({task['estimated_time']} mins)"
+        task_color = "#32CD32" if task["completed"] else "#FFA500"
+        if st.button(label, key=f"toggle_complete_{task['id']}"):
             toggle_complete(task["id"])
+
+    # RIGHT COLUMN: "Options" button
     with row_cols[1]:
-        # Use a plain string (no HTML) for the button label
-        task_display = f"{task['title']} ({task['estimated_time']} mins)"
-        if st.button(task_display, key=f"options_{task['id']}"):
+        if st.button("Options", key=f"options_{task['id']}"):
             # Toggle the options panel
             if st.session_state.options_for == task["id"]:
                 st.session_state.options_for = None
@@ -199,7 +206,7 @@ for task in st.session_state.tasks:
                 if st.button("Delete", key=f"delete_option_{task['id']}"):
                     delete_task(task["id"])
             with opt_cols[3]:
-                if st.button("Close Options", key=f"close_options_{task['id']}"):
+                if st.button("Close", key=f"close_options_{task['id']}"):
                     st.session_state.options_for = None
                     st.rerun()
 
