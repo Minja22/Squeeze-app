@@ -75,7 +75,7 @@ if st.session_state.optimized_tasks:
         st.session_state.optimized_tasks = []
         st.rerun()
     for task in st.session_state.optimized_tasks:
-        col1, col2 = st.columns([6, 1])
+        col1, col2 = st.columns([6, 0.8])
         with col1:
             task_color = "#FFA500" if not task["completed"] else "#32CD32"
             st.markdown(
@@ -132,7 +132,7 @@ if st.session_state.go_time_prompt:
         step=5,
         key="time_slider"
     )
-    prompt_cols = st.columns([1,1])
+    prompt_cols = st.columns([1, 1])
     with prompt_cols[0]:
         if st.button("Generate Optimized List", key="generate_optimized"):
             st.session_state.optimized_tasks = generate_optimized_tasks(time_value)
@@ -148,7 +148,8 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    col1, col2, col3, col4 = st.columns([6, 1, 1, 1])
+    # Adjust column ratios for minimal spacing between the action buttons
+    col1, col2, col3, col4 = st.columns([6, 0.8, 0.8, 0.8])
     with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
