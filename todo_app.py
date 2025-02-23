@@ -148,8 +148,8 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    # Create two columns: one for the task info and one for a vertical stack of buttons.
-    col1, col2 = st.columns([6, 1])
+    # Two columns: one for the task details and one for the action buttons.
+    col1, col2 = st.columns([6, 2])
     with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
@@ -158,8 +158,15 @@ for task in st.session_state.tasks:
             unsafe_allow_html=True,
         )
     with col2:
-        # Stack the buttons vertically by calling them one after another.
-        st.button("✔", key=f"complete_{task['id']}", on_click=toggle_complete, args=(task["id"],))
-        st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}", on_click=toggle_star, args=(task["id"],))
-        st.button("🗑", key=f"delete_{task['id']}", on_click=delete_task, args=(task["id"],))
+        # Create a row of three equally spaced columns for the buttons.
+        btn_cols = st.columns(3)
+        with btn_cols[0]:
+            if st.button("✔", key=f"complete_{task['id']}"):
+                toggle_complete(task["id"])
+        with btn_cols[1]:
+            if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
+                toggle_star(task["id"])
+        with btn_cols[2]:
+            if st.button("🗑", key=f"delete_{task['id']}"):
+                delete_task(task["id"])
 st.markdown("---")
