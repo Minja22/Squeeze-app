@@ -148,8 +148,8 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    # Adjust column ratios for minimal spacing between the action buttons
-    col1, col2, col3, col4 = st.columns([0.1, 1, 1, 1])
+    # Create two columns: one for the task info and one for a vertical stack of buttons.
+    col1, col2 = st.columns([6, 1])
     with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
@@ -158,12 +158,8 @@ for task in st.session_state.tasks:
             unsafe_allow_html=True,
         )
     with col2:
-        if st.button("✔", key=f"complete_{task['id']}"):
-            toggle_complete(task["id"])
-    with col3:
-        if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
-            toggle_star(task["id"])
-    with col4:
-        if st.button("🗑", key=f"delete_{task['id']}"):
-            delete_task(task["id"])
+        # Stack the buttons vertically by calling them one after another.
+        st.button("✔", key=f"complete_{task['id']}", on_click=toggle_complete, args=(task["id"],))
+        st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}", on_click=toggle_star, args=(task["id"],))
+        st.button("🗑", key=f"delete_{task['id']}", on_click=delete_task, args=(task["id"],))
 st.markdown("---")
