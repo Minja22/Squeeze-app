@@ -148,7 +148,7 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    col1, col2, col3, col4 = st.columns([6, 0, 0, 0])
+    col1, col2, col3, col4 = st.columns([6, 1, 1, 1])
     with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
