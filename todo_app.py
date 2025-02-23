@@ -56,12 +56,10 @@ def generate_optimized_tasks(time_available):
     return optimized
 
 def on_checkbox_change(task_id):
-    # When the checkbox changes, update the task's completed state based on the widget value.
     new_val = st.session_state.get(f"checkbox_{task_id}", False)
     for task in st.session_state.tasks:
         if task["id"] == task_id:
             task["completed"] = new_val
-    # No explicit st.rerun() here; the natural re-run will update the UI.
 
 # --- Optimized Task List (displayed at the very top) ---
 if st.session_state.optimized_tasks and all(task["completed"] for task in st.session_state.optimized_tasks):
@@ -157,20 +155,20 @@ for task in st.session_state.tasks:
     task_text = (f"<span style='font-size:20px; color:{'#FFA500' if not task['completed'] else '#32CD32'};'>"
                  f"{task['title']}{star_icon}</span> <small style='color:#666;'>({task['estimated_time']} mins)</small>")
     if st.session_state.show_options:
-        cols = st.columns([6, 1, 1])
+        cols = st.columns([1, 6, 1])
         with cols[0]:
-            st.markdown(task_text, unsafe_allow_html=True)
-        with cols[1]:
             st.checkbox("", value=task["completed"], key=f"checkbox_{task['id']}",
                         on_change=on_checkbox_change, args=(task["id"],))
+        with cols[1]:
+            st.markdown(task_text, unsafe_allow_html=True)
         with cols[2]:
             if st.button("🗑", key=f"delete_{task['id']}"):
                 delete_task(task["id"])
     else:
-        cols = st.columns([7, 1])
+        cols = st.columns([1, 7])
         with cols[0]:
-            st.markdown(task_text, unsafe_allow_html=True)
-        with cols[1]:
             st.checkbox("", value=task["completed"], key=f"checkbox_{task['id']}",
                         on_change=on_checkbox_change, args=(task["id"],))
+        with cols[1]:
+            st.markdown(task_text, unsafe_allow_html=True)
 st.markdown("---")
