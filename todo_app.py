@@ -148,21 +148,26 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    col1, col2, col3, col4 = st.columns([6, 1, 1, 1])
-    with col1:
+    # Two main columns: one for the task details, one for the action buttons.
+    cols = st.columns([6, 2])
+    with cols[0]:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
             f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> "
             f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
             unsafe_allow_html=True,
         )
-    with col2:
-        if st.button("✔", key=f"complete_{task['id']}"):
-            toggle_complete(task["id"])
-    with col3:
-        if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
-            toggle_star(task["id"])
-    with col4:
-        if st.button("🗑", key=f"delete_{task['id']}"):
-            delete_task(task["id"])
+    with cols[1]:
+        # Create subcolumns for the three buttons (check, star, trash)
+        btn_cols = st.columns(3)
+        with btn_cols[0]:
+            if st.button("✔", key=f"complete_{task['id']}"):
+                toggle_complete(task["id"])
+        with btn_cols[1]:
+            if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
+                toggle_star(task["id"])
+        with btn_cols[2]:
+            if st.button("🗑", key=f"delete_{task['id']}"):
+                delete_task(task["id"])
 st.markdown("---")
+
