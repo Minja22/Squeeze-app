@@ -15,16 +15,16 @@ if "go_time_prompt" not in st.session_state:
     st.session_state.go_time_prompt = False
 if "show_task_input" not in st.session_state:
     st.session_state.show_task_input = False
-if "options_for" not in st.session_state:
-    st.session_state.options_for = None  # holds the task id for which options are open
+if "show_options" not in st.session_state:
+    st.session_state.show_options = False
 
-def add_task(title, estimated_time):
+def add_task(title, estimated_time, starred):
     task = {
         "id": str(uuid.uuid4()),
         "title": title,
         "estimated_time": estimated_time,
         "completed": False,
-        "starred": False,
+        "starred": starred,
     }
     st.session_state.tasks.append(task)
     st.session_state.show_task_input = False  # hide task input after adding
@@ -36,23 +36,8 @@ def toggle_complete(task_id):
             task["completed"] = not task["completed"]
     st.rerun()
 
-def toggle_star(task_id):
-    for task in st.session_state.tasks:
-        if task["id"] == task_id:
-            task["starred"] = not task["starred"]
-    st.rerun()
-
 def delete_task(task_id):
     st.session_state.tasks = [task for task in st.session_state.tasks if task["id"] != task_id]
-    # If the options panel is open for this task, close it.
-    if st.session_state.options_for == task_id:
-        st.session_state.options_for = None
-    st.rerun()
-
-def update_task_time(task_id, new_time):
-    for task in st.session_state.tasks:
-        if task["id"] == task_id:
-            task["estimated_time"] = new_time
     st.rerun()
 
 def generate_optimized_tasks(time_available):
@@ -89,9 +74,11 @@ if st.session_state.optimized_tasks:
         col1, col2 = st.columns([6, 1])
         with col1:
             task_color = "#FFA500" if not task["completed"] else "#32CD32"
+            # Show star indicator if starred
+            star_icon = " ⭐" if task["starred"] else ""
             st.markdown(
-                f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> "
-                f"({task['estimated_time']} mins)",
+                f"<span style='color:{task_color}; font-size:20px;'>{task['title']}{star_icon}</span> "
+                f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
                 unsafe_allow_html=True,
             )
         with col2:
@@ -112,7 +99,7 @@ with cols[1]:
         st.session_state.go_time_prompt = not st.session_state.go_time_prompt
         st.rerun()
 
-# --- Input Fields Below the Button Row ---
+# --- Input Fields for Creating a Task ---
 if st.session_state.show_task_input:
     new_task_title = st.text_input("Task Title", key="new_task_title")
     new_task_time = st.number_input(
@@ -123,17 +110,18 @@ if st.session_state.show_task_input:
         step=5,
         key="new_task_time"
     )
+    new_task_starred = st.checkbox("Star this task", key="new_task_starred")
     input_cols = st.columns([1, 1])
     with input_cols[0]:
         if st.button("Add", key="add_task_button"):
             if new_task_title:
-                add_task(new_task_title, new_task_time)
+                add_task(new_task_title, new_task_time, new_task_starred)
     with input_cols[1]:
         if st.button("Cancel", key="cancel_task_button"):
             st.session_state.show_task_input = False
             st.rerun()
 
-# --- Available Time Prompt directly below "Let's Go" ---
+# --- Available Time Prompt (directly below "Let's Go") ---
 if st.session_state.go_time_prompt:
     time_value = st.slider(
         "Available Time (mins)",
@@ -158,56 +146,32 @@ st.markdown("---")
 
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
+# Add an "Options" button to toggle extra task options.
+if st.button("Options", key="toggle_options"):
+    st.session_state.show_options = not st.session_state.show_options
+    st.rerun()
+
+# For each task, in default mode, only show a check button.
+# In options mode, show a delete button as well.
 for task in st.session_state.tasks:
-    # Two columns: left is the "task name" button (tapping toggles completion),
-    # right is an "Options" button to open the panel for that task.
-    row_cols = st.columns([8, 2])
-    
-    # LEFT COLUMN: Tapping the task name toggles completion
-    with row_cols[0]:
-        label = f"{task['title']} ({task['estimated_time']} mins)"
-        task_color = "#32CD32" if task["completed"] else "#FFA500"
-        if st.button(label, key=f"toggle_complete_{task['id']}"):
-            toggle_complete(task["id"])
-
-    # RIGHT COLUMN: "Options" button
-    with row_cols[1]:
-        if st.button("Options", key=f"options_{task['id']}"):
-            # Toggle the options panel
-            if st.session_state.options_for == task["id"]:
-                st.session_state.options_for = None
-            else:
-                st.session_state.options_for = task["id"]
-            st.rerun()
-
-    # If this task's options are open, show the options panel
-    if st.session_state.options_for == task["id"]:
-        with st.container():
-            st.markdown("**Options:**")
-            # Adjust time option
-            new_time = st.number_input(
-                "Adjust Time (mins)",
-                min_value=1,
-                max_value=120,
-                value=task["estimated_time"],
-                step=5,
-                key=f"adjust_time_{task['id']}"
-            )
-            opt_cols = st.columns([1,1,1,1])
-            with opt_cols[0]:
-                if st.button("Update Time", key=f"update_time_{task['id']}"):
-                    update_task_time(task["id"], new_time)
-            with opt_cols[1]:
-                # Toggle star option
-                label = "Unstar" if task["starred"] else "Star"
-                if st.button(label, key=f"star_option_{task['id']}"):
-                    toggle_star(task["id"])
-            with opt_cols[2]:
-                if st.button("Delete", key=f"delete_option_{task['id']}"):
-                    delete_task(task["id"])
-            with opt_cols[3]:
-                if st.button("Close", key=f"close_options_{task['id']}"):
-                    st.session_state.options_for = None
-                    st.rerun()
-
+    # Prepare the task text with star indicator if starred.
+    star_icon = " ⭐" if task["starred"] else ""
+    task_text = f"<span style='font-size:20px; color:{'#FFA500' if not task['completed'] else '#32CD32'};'>{task['title']}{star_icon}</span> <small style='color:#666;'>({task['estimated_time']} mins)</small>"
+    if st.session_state.show_options:
+        cols = st.columns([6, 1, 1])
+        with cols[0]:
+            st.markdown(task_text, unsafe_allow_html=True)
+        with cols[1]:
+            if st.button("✔", key=f"complete_{task['id']}"):
+                toggle_complete(task["id"])
+        with cols[2]:
+            if st.button("🗑", key=f"delete_{task['id']}"):
+                delete_task(task["id"])
+    else:
+        cols = st.columns([7, 1])
+        with cols[0]:
+            st.markdown(task_text, unsafe_allow_html=True)
+        with cols[1]:
+            if st.button("✔", key=f"complete_{task['id']}"):
+                toggle_complete(task["id"])
 st.markdown("---")
