@@ -3,28 +3,21 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
-# Custom CSS for mobile optimization:
+# Custom CSS for mobile optimization
 st.markdown(
     """
     <style>
-    /* Force horizontal columns (button rows) to not wrap */
-    [data-testid="stHorizontalBlock"] {
-        flex-wrap: nowrap !important;
-    }
-    /* Ensure columns inside horizontal blocks maintain a minimum width on small screens */
-    @media screen and (max-width: 600px) {
-        [data-testid="stHorizontalBlock"] > div {
-            flex: 1 1 auto !important;
-            min-width: 80px !important;
+        div[data-testid="column"] {
+            width: fit-content !important;
+            flex: unset;
         }
-        .stButton > button {
-            font-size: 12px;
-            padding: 0.25rem 0.5rem;
+        div[data-testid="column"] * {
+            width: fit-content !important;
         }
-        .css-1lcbmhc {
-            padding: 0.5rem;
+        /* Additional styling to ensure horizontal alignment */
+        [data-testid="stHorizontalBlock"] {
+            flex-wrap: nowrap !important;
         }
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -136,7 +129,7 @@ if st.session_state.show_task_input:
         min_value=1,
         max_value=120,
         value=5,
-        step=5,  # estimated time in increments of 5
+        step=5,
         key="new_task_time"
     )
     input_cols = st.columns([1, 1])
@@ -154,7 +147,7 @@ if st.session_state.go_time_prompt:
     time_value = st.slider(
         "Available Time (mins)",
         min_value=5,
-        max_value=120,  # max 2 hours (120 minutes)
+        max_value=120,
         value=30,
         step=5,
         key="time_slider"
