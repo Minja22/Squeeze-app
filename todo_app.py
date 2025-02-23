@@ -1,27 +1,5 @@
 import streamlit as st
-
-# Add custom CSS at the top of your script
-st.markdown("""
-    <style>
-    .small-button button {
-        padding: 0.2em 0.5em;
-        font-size: 0.8em;
-        margin: 0 2px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# Then later, when creating buttons, wrap them in a container that applies the CSS class.
-col1, col2, col3 = st.columns(3)
-with col1:
-    if st.button("✔", key="complete_example"):
-        st.write("Complete clicked")
-with col2:
-    if st.button("⭐", key="star_example"):
-        st.write("Star clicked")
-with col3:
-    if st.button("🗑", key="delete_example"):
-        st.write("Delete clicked")
+import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
@@ -170,26 +148,21 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    # Two main columns: one for the task details, one for the action buttons.
-    cols = st.columns([6, 2])
-    with cols[0]:
+    col1, col2, col3, col4 = st.columns([6, 1, 1, 1])
+    with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
             f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> "
             f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
             unsafe_allow_html=True,
         )
-    with cols[1]:
-        # Create subcolumns for the three buttons (check, star, trash)
-        btn_cols = st.columns(3)
-        with btn_cols[0]:
-            if st.button("✔", key=f"complete_{task['id']}"):
-                toggle_complete(task["id"])
-        with btn_cols[1]:
-            if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
-                toggle_star(task["id"])
-        with btn_cols[2]:
-            if st.button("🗑", key=f"delete_{task['id']}"):
-                delete_task(task["id"])
+    with col2:
+        if st.button("✔", key=f"complete_{task['id']}"):
+            toggle_complete(task["id"])
+    with col3:
+        if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
+            toggle_star(task["id"])
+    with col4:
+        if st.button("🗑", key=f"delete_{task['id']}"):
+            delete_task(task["id"])
 st.markdown("---")
-
