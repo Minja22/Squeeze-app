@@ -44,7 +44,6 @@ def toggle_star(task_id):
 
 def delete_task(task_id):
     st.session_state.tasks = [task for task in st.session_state.tasks if task["id"] != task_id]
-    # If the options panel is open for this task, close it.
     if st.session_state.options_for == task_id:
         st.session_state.options_for = None
     st.rerun()
@@ -91,7 +90,7 @@ if st.session_state.optimized_tasks:
             task_color = "#FFA500" if not task["completed"] else "#32CD32"
             st.markdown(
                 f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> "
-                f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
+                f"({task['estimated_time']} mins)",
                 unsafe_allow_html=True,
             )
         with col2:
@@ -159,26 +158,26 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    # Main row: Check button and task title button.
     row_cols = st.columns([1, 9])
     with row_cols[0]:
         if st.button("✔", key=f"complete_{task['id']}"):
             toggle_complete(task["id"])
     with row_cols[1]:
-        # The task title button: tapping toggles the options panel.
-        task_display = f"{task['title']}  <small style='color:#666;'>({task['estimated_time']} mins)</small>"
+        # Use a plain string (no HTML) for the button label
+        task_display = f"{task['title']} ({task['estimated_time']} mins)"
         if st.button(task_display, key=f"options_{task['id']}"):
-            # Toggle options: if already open for this task, close it; otherwise open.
+            # Toggle the options panel
             if st.session_state.options_for == task["id"]:
                 st.session_state.options_for = None
             else:
                 st.session_state.options_for = task["id"]
             st.rerun()
-    # If this task's options are open, show the options panel.
+
+    # If this task's options are open, show the options panel
     if st.session_state.options_for == task["id"]:
         with st.container():
             st.markdown("**Options:**")
-            # Adjust time option.
+            # Adjust time option
             new_time = st.number_input(
                 "Adjust Time (mins)",
                 min_value=1,
@@ -192,7 +191,7 @@ for task in st.session_state.tasks:
                 if st.button("Update Time", key=f"update_time_{task['id']}"):
                     update_task_time(task["id"], new_time)
             with opt_cols[1]:
-                # Toggle star option.
+                # Toggle star option
                 label = "Unstar" if task["starred"] else "Star"
                 if st.button(label, key=f"star_option_{task['id']}"):
                     toggle_star(task["id"])
