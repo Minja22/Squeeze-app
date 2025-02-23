@@ -149,7 +149,7 @@ st.markdown("---")
 st.markdown("## To Do")
 for task in st.session_state.tasks:
     # Adjust column ratios for minimal spacing between the action buttons
-    col1, col2, col3, col4 = st.columns([.5, 0.1, 0.1, 0.1])
+    col1, col2, col3, col4 = st.columns([0.1, 0.05, 0.05, 0.05])
     with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
