@@ -1,6 +1,21 @@
 import streamlit as st
 import uuid
 
+# --- Inject Custom CSS to Force Columns to Stay Horizontal ---
+st.markdown(
+    """
+    <style>
+    /* Force columns to remain in a row on smaller screens */
+    @media (max-width: 768px) {
+        div[data-testid="stHorizontalBlock"] {
+            flex-wrap: nowrap !important;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
 # Big centered header for the app
