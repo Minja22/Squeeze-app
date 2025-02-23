@@ -75,7 +75,7 @@ if st.session_state.optimized_tasks:
         st.session_state.optimized_tasks = []
         st.rerun()
     for task in st.session_state.optimized_tasks:
-        col1, col2 = st.columns([6, 1])
+        col1, col_buttons = st.columns([6, 1])
         with col1:
             task_color = "#FFA500" if not task["completed"] else "#32CD32"
             st.markdown(
@@ -83,9 +83,13 @@ if st.session_state.optimized_tasks:
                 f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
                 unsafe_allow_html=True,
             )
-        with col2:
+        with col_buttons:
             if st.button("✔", key=f"opt_complete_{task['id']}"):
                 toggle_complete(task["id"])
+            if st.button("⭐" if task["starred"] else "☆", key=f"opt_star_{task['id']}"):
+                toggle_star(task["id"])
+            if st.button("🗑", key=f"opt_delete_{task['id']}"):
+                delete_task(task["id"])
     total_time = sum(task["estimated_time"] for task in st.session_state.optimized_tasks)
     st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
 st.markdown("---")
@@ -148,7 +152,7 @@ st.markdown("---")
 # --- To Do (Master Task List) ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    col1, col2, col3, col4 = st.columns([6, 1, 1, 1])
+    col1, col_buttons = st.columns([6, 1])
     with col1:
         task_color = "#FFA500" if not task["completed"] else "#32CD32"
         st.markdown(
@@ -156,13 +160,11 @@ for task in st.session_state.tasks:
             f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
             unsafe_allow_html=True,
         )
-    with col2:
+    with col_buttons:
         if st.button("✔", key=f"complete_{task['id']}"):
             toggle_complete(task["id"])
-    with col3:
         if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
             toggle_star(task["id"])
-    with col4:
         if st.button("🗑", key=f"delete_{task['id']}"):
             delete_task(task["id"])
 st.markdown("---")
