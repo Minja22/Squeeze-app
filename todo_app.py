@@ -3,6 +3,7 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
+# Big centered header for the app
 st.markdown("<h1 style='text-align: center;'>SQUEEZE</h1>", unsafe_allow_html=True)
 
 # Initialize session state variables if not already set
@@ -100,9 +101,8 @@ with cols[1]:
         st.session_state.go_time_prompt = not st.session_state.go_time_prompt
         st.rerun()
 
-# --- Input Fields Below the Button Row ---
+# --- Input Fields for Task Creation ---
 if st.session_state.show_task_input:
-    st.markdown("### Add a New Task")
     new_task_title = st.text_input("Task Title", key="new_task_title")
     new_task_time = st.number_input("Time (mins)", min_value=1, max_value=120, value=5, step=5, key="new_task_time")
     input_cols = st.columns(2)
@@ -117,7 +117,6 @@ if st.session_state.show_task_input:
 
 # --- Available Time Prompt ---
 if st.session_state.go_time_prompt:
-    st.markdown("### Available Time")
     time_value = st.slider("Available Time (mins)", min_value=5, max_value=120, value=30, step=5, key="time_slider")
     prompt_cols = st.columns(2)
     with prompt_cols[0]:
@@ -132,43 +131,26 @@ if st.session_state.go_time_prompt:
 
 st.markdown("---")
 
-# --- To Do (Master Task List) ---
+# --- To Do (Master Task List) with Modal Pop-Up for Actions ---
 st.markdown("## To Do")
 for task in st.session_state.tasks:
-    cols = st.columns([6, 1, 1, 1])
-    with cols[0]:
-        task_color = "#FFA500" if not task["completed"] else "#32CD32"
-        st.markdown(
-            f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> "
-            f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
-            unsafe_allow_html=True,
-        )
-    with cols[1]:
-        if st.button("✔", key=f"complete_{task['id']}"):
-            toggle_complete(task["id"])
-    with cols[2]:
-        if st.button("⭐" if task["starred"] else "☆", key=f"star_{task['id']}"):
-            toggle_star(task["id"])
-    with cols[3]:
-        if st.button("🗑", key=f"delete_{task['id']}"):
-            delete_task(task["id"])
-st.markdown("---")
-
-# --- Bottom Navigation Bar ---
-st.markdown("### Navigation")
-nav_cols = st.columns(3)
-with nav_cols[0]:
-    if st.button("To Do", key="nav_todo"):
-        st.session_state.show_task_input = False
-        st.session_state.go_time_prompt = False
-        st.rerun()
-with nav_cols[1]:
-    if st.button("Add Task", key="nav_add"):
-        st.session_state.show_task_input = True
-        st.session_state.go_time_prompt = False
-        st.rerun()
-with nav_cols[2]:
-    if st.button("Let's Go", key="nav_go"):
-        st.session_state.go_time_prompt = True
-        st.session_state.show_task_input = False
-        st.rerun()
+    task_color = "#FFA500" if not task["completed"] else "#32CD32"
+    st.markdown(
+        f"<span style='color:{task_color}; font-size:20px;'>{task['title']}</span> "
+        f"<small style='color:#666;'>({task['estimated_time']} mins)</small>",
+        unsafe_allow_html=True,
+    )
+    # Instead of placing multiple buttons in a row, we use one Actions button that opens a modal.
+    if st.button("Actions", key=f"actions_{task['id']}"):
+        with st.modal(key=f"modal_{task['id']}"):
+            st.markdown(f"### Actions for: {task['title']}")
+            if st.button("Complete", key=f"complete_{task['id']}"):
+                toggle_complete(task["id"])
+                st.experimental_rerun()  # refresh after action
+            if st.button("Star", key=f"star_{task['id']}"):
+                toggle_star(task["id"])
+                st.experimental_rerun()
+            if st.button("Delete", key=f"delete_{task['id']}"):
+                delete_task(task["id"])
+                st.experimental_rerun()
+    st.markdown("---")
