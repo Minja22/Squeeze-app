@@ -3,25 +3,34 @@ import uuid
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
-# Custom CSS for mobile optimization
-st.markdown(
-    """
+# Incorporate the provided CSS snippet for better mobile layout
+st.markdown("""
     <style>
         div[data-testid="column"] {
-            width: fit-content !important;
-            flex: unset;
+            flex: 0 3 max-content !important;  
+            min-width: min-content;                   
+            justify-content: start !important;
+            margin: -0.3em !important;        
+            padding: 0;          
         }
         div[data-testid="column"] * {
             width: fit-content !important;
+            padding: 0.015em;
+            margin: -0.035em;
+            border-radius: 16px;
         }
-        /* Additional styling to ensure horizontal alignment */
-        [data-testid="stHorizontalBlock"] {
-            flex-wrap: nowrap !important;
+        div[data-testid="column"] button {
+            height: 1.9em;
+            align-items: center;
+            justify-content: center;
+            padding: 0 0.3em 0 0.3em;
+        }
+        div[data-testid="column"] button * {
+            margin: -0.1em;
+            padding: 0;
         }
     </style>
-    """,
-    unsafe_allow_html=True,
-)
+    """, unsafe_allow_html=True)
 
 # Big centered header for the app
 st.markdown("<h1 style='text-align: center;'>SQUEEZE</h1>", unsafe_allow_html=True)
@@ -110,7 +119,7 @@ if st.session_state.optimized_tasks:
     st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
 st.markdown("---")
 
-# --- Row for Task Creation and "Let's Go" Buttons ---
+# --- Row for Task Creation and "Let's Go" Buttons (side by side) ---
 cols = st.columns(2)
 with cols[0]:
     if st.button("➕", key="show_task_input_button"):
@@ -147,7 +156,7 @@ if st.session_state.go_time_prompt:
     time_value = st.slider(
         "Available Time (mins)",
         min_value=5,
-        max_value=120,
+        max_value=120,  # max is 2 hours (120 minutes)
         value=30,
         step=5,
         key="time_slider"
