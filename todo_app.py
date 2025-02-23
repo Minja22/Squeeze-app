@@ -1,7 +1,10 @@
 import streamlit as st
 import uuid
 
-# --- Inject Custom CSS to Force Columns to Stay Horizontal ---
+# 1) Set page config FIRST
+st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
+
+# 2) Then inject any custom CSS or other Streamlit calls
 st.markdown(
     """
     <style>
@@ -16,12 +19,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
-
 # Big centered header for the app
 st.markdown("<h1 style='text-align: center;'>SQUEEZE</h1>", unsafe_allow_html=True)
 
-# Initialize session state variables if not already set
+# Initialize session state variables
 if "tasks" not in st.session_state:
     st.session_state.tasks = []
 if "optimized_tasks" not in st.session_state:
@@ -80,7 +81,7 @@ def generate_optimized_tasks(time_available):
             total += task["estimated_time"]
     return optimized
 
-# --- Optimized Task List (displayed at the very top) ---
+# --- Optimized Task List (displayed at the top) ---
 if st.session_state.optimized_tasks and all(task["completed"] for task in st.session_state.optimized_tasks):
     st.session_state.optimized_tasks = []
 
