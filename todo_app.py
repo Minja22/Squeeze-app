@@ -1,5 +1,27 @@
 import streamlit as st
-import uuid
+
+# Add custom CSS at the top of your script
+st.markdown("""
+    <style>
+    .small-button button {
+        padding: 0.2em 0.5em;
+        font-size: 0.8em;
+        margin: 0 2px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Then later, when creating buttons, wrap them in a container that applies the CSS class.
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("✔", key="complete_example"):
+        st.write("Complete clicked")
+with col2:
+    if st.button("⭐", key="star_example"):
+        st.write("Star clicked")
+with col3:
+    if st.button("🗑", key="delete_example"):
+        st.write("Delete clicked")
 
 st.set_page_config(page_title="Squeeze - Smart To-Do List", layout="centered")
 
