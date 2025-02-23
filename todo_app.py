@@ -30,12 +30,6 @@ def add_task(title, estimated_time, starred):
     st.session_state.show_task_input = False  # hide task input after adding
     st.rerun()
 
-def toggle_complete(task_id):
-    for task in st.session_state.tasks:
-        if task["id"] == task_id:
-            task["completed"] = not task["completed"]
-    st.rerun()
-
 def delete_task(task_id):
     st.session_state.tasks = [task for task in st.session_state.tasks if task["id"] != task_id]
     st.rerun()
@@ -61,6 +55,14 @@ def generate_optimized_tasks(time_available):
             total += task["estimated_time"]
     return optimized
 
+def on_checkbox_change(task_id):
+    # When the checkbox changes, update the task's completed state based on the widget value.
+    new_val = st.session_state.get(f"checkbox_{task_id}", False)
+    for task in st.session_state.tasks:
+        if task["id"] == task_id:
+            task["completed"] = new_val
+    # No explicit st.rerun() here; the natural re-run will update the UI.
+
 # --- Optimized Task List (displayed at the very top) ---
 if st.session_state.optimized_tasks and all(task["completed"] for task in st.session_state.optimized_tasks):
     st.session_state.optimized_tasks = []
@@ -74,7 +76,6 @@ if st.session_state.optimized_tasks:
         col1, col2 = st.columns([6, 1])
         with col1:
             task_color = "#FFA500" if not task["completed"] else "#32CD32"
-            # Show star indicator if starred
             star_icon = " ⭐" if task["starred"] else ""
             st.markdown(
                 f"<span style='color:{task_color}; font-size:20px;'>{task['title']}{star_icon}</span> "
@@ -82,8 +83,8 @@ if st.session_state.optimized_tasks:
                 unsafe_allow_html=True,
             )
         with col2:
-            if st.button("✔", key=f"opt_complete_{task['id']}"):
-                toggle_complete(task["id"])
+            st.checkbox("", value=task["completed"], key=f"checkbox_{task['id']}",
+                        on_change=on_checkbox_change, args=(task["id"],))
     total_time = sum(task["estimated_time"] for task in st.session_state.optimized_tasks)
     st.markdown(f"**Total Scheduled Time:** {total_time} minutes")
 st.markdown("---")
@@ -151,19 +152,17 @@ if st.button("Options", key="toggle_options"):
     st.session_state.show_options = not st.session_state.show_options
     st.rerun()
 
-# For each task, in default mode, only show a check button.
-# In options mode, show a delete button as well.
 for task in st.session_state.tasks:
-    # Prepare the task text with star indicator if starred.
     star_icon = " ⭐" if task["starred"] else ""
-    task_text = f"<span style='font-size:20px; color:{'#FFA500' if not task['completed'] else '#32CD32'};'>{task['title']}{star_icon}</span> <small style='color:#666;'>({task['estimated_time']} mins)</small>"
+    task_text = (f"<span style='font-size:20px; color:{'#FFA500' if not task['completed'] else '#32CD32'};'>"
+                 f"{task['title']}{star_icon}</span> <small style='color:#666;'>({task['estimated_time']} mins)</small>")
     if st.session_state.show_options:
         cols = st.columns([6, 1, 1])
         with cols[0]:
             st.markdown(task_text, unsafe_allow_html=True)
         with cols[1]:
-            if st.button("✔", key=f"complete_{task['id']}"):
-                toggle_complete(task["id"])
+            st.checkbox("", value=task["completed"], key=f"checkbox_{task['id']}",
+                        on_change=on_checkbox_change, args=(task["id"],))
         with cols[2]:
             if st.button("🗑", key=f"delete_{task['id']}"):
                 delete_task(task["id"])
@@ -172,6 +171,6 @@ for task in st.session_state.tasks:
         with cols[0]:
             st.markdown(task_text, unsafe_allow_html=True)
         with cols[1]:
-            if st.button("✔", key=f"complete_{task['id']}"):
-                toggle_complete(task["id"])
+            st.checkbox("", value=task["completed"], key=f"checkbox_{task['id']}",
+                        on_change=on_checkbox_change, args=(task["id"],))
 st.markdown("---")
